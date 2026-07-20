@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd /workspaces/SERVER
+
+mkdir -p /tmp/playit
+
+nohup ./playit-linux-amd64 --socket-path /tmp/playit/playit.sock > playit.log 2>&1 &
+
+cd servidor_minecraft
+
+./run.sh
+ 

@@ -1,0 +1,116 @@
+
+#Iron's Epic Spell Slingers — Server Configuration
+[irons_epic_spell_slingers]
+
+	#--- Gun Type Classification ---
+	#Determines whether a converted gun is RAPID, SNIPER, or LAUNCHER.
+	[irons_epic_spell_slingers.gun_classification]
+		#Fire rate (shots per 20 ticks) at or above which a gun is RAPID.
+		#Pistol fires ~4/s, Assault Rifle ~10/s. Default 6 classifies all full-auto guns.
+		#Range: 1 ~ 100
+		rapidRateThreshold = 6
+		#Base projectile damage at or above which a gun is LAUNCHER.
+		#Bazooka and Grenade Launcher deal ~12-16 damage. Default 10 avoids mis-classifying rifles.
+		#Range: 1.0 ~ 100.0
+		launcherDamageThreshold = 10.0
+
+	#--- Spell Slot Caps ---
+	#Controls how many spells can be loaded into a converted gun.
+	#Gun type is derived from the original gun at conversion time and stored in NBT.
+	[irons_epic_spell_slingers.spell_slots]
+		#For RAPID guns: slots = max(1, floor(maxAmmo * ratio)).
+		#At 0.25: Machine Pistol=20, MiniGun=25, Assault Rifle=10, Pistol=4, Shotgun=2.
+		#Raise toward 1.0 for more slots; lower toward 0.1 for stricter limits.
+		#Range: 0.05 ~ 1.0
+		rapidSlotRatio = 0.25
+		#For SNIPER guns: slots = min(maxAmmo, sniperMaxSlots).
+		#Keeps bolt-action rifles at 3 slots max (Rifle=3, Heavy Rifle=3 by default).
+		#Range: 1 ~ 20
+		sniperMaxSlots = 3
+		#For LAUNCHER guns: slots = min(maxAmmo, launcherMaxSlots).
+		#Bazooka/Grenade Launcher already have maxAmmo=1; this cap enforces it for modpack guns.
+		#Range: 1 ~ 5
+		launcherMaxSlots = 1
+		#Per-gun slot overrides. Takes priority over type-based formulas.
+		#Format: "modid:gun_name=slots"  e.g.  ["cgm:mini_gun=15", "cgm:pistol=6"]
+		gunSlotOverrides = []
+
+	#--- Spell Power ---
+	[irons_epic_spell_slingers.spell_power]
+		#Base spell power bonus (MULTIPLY_BASE) applied to the gun's school attribute when held.
+		#0.15 = +15%, matching how ISS armor and weapons apply spell power.
+		#Written into the gun's NBT at conversion time.
+		#Range: 0.0 ~ 1.0
+		baseSpellPowerBonus = 0.15
+		#Spell power % increase per ISS school upgrade orb applied at the workbench.
+		#0.05 = +5% per orb.
+		#Range: 0.01 ~ 0.5
+		upgradeOrbIncrement = 0.05
+		#Maximum spell power bonus a gun can accumulate through orb upgrades.
+		#0.50 = 50% cap. Prevents stacking to unreasonable values.
+		#Range: 0.15 ~ 2.0
+		maxSpellPowerBonus = 0.5
+
+	#--- Spell Level Modifiers ---
+	#Changes the effective level of every spell cast from this gun type.
+	#Applied via ModifySpellLevelEvent — the anti-cheese mechanism.
+	#RAPID guns fire many times per second so they cast weaker spells.
+	#SNIPER guns fire rarely so they cast stronger spells.
+	[irons_epic_spell_slingers.spell_level_mods]
+		#Level modifier for RAPID guns (default -1 = weaker).
+		#Example: level-3 Fireball from a Machine Pistol fires as level 2.
+		#Range: -5 ~ 5
+		rapidSpellLevelMod = -1
+		#Level modifier for SNIPER guns (default +1 = stronger).
+		#Example: level-3 Fireball from a Sniper Rifle fires as level 4.
+		#Range: -5 ~ 5
+		sniperSpellLevelMod = 1
+
+	#--- Mana Fallback (Phase 2 — inactive in Phase 1) ---
+	#When a spell gun fires with empty spell slots it draws mana for a raw bolt.
+	#The bolt's power scales with the gun's school spell power attribute.
+	[irons_epic_spell_slingers.mana_fallback]
+		#Default mode for newly converted guns.
+		#PERCENT = fraction of max mana per shot.  BASE = flat mana cost.
+		manaFallbackDefaultMode = "PERCENT"
+		#Fraction of max mana consumed per fallback shot when mode=PERCENT. 0.15 = 15%.
+		#Range: 0.01 ~ 1.0
+		manaFallbackPercent = 0.15
+		#Flat mana cost per fallback shot when mode=BASE.
+		#Range: 1.0 ~ 1000.0
+		manaFallbackBase = 20.0
+		#Damage multiplier for fallback bolt relative to the gun's base spell power.
+		#Range: 0.1 ~ 10.0
+		manaFallbackDamageMult = 1.0
+		#Mana cost multiplier for RAPID guns on fallback. Cheap rapid shots.
+		#Range: 0.1 ~ 5.0
+		rapidManaMult = 0.5
+		#Mana cost multiplier for SNIPER guns on fallback. Costly power shots.
+		#Range: 0.1 ~ 10.0
+		sniperManaMult = 2.0
+		#Damage multiplier for SNIPER fallback shots.
+		#Range: 0.1 ~ 10.0
+		sniperDamageMult = 2.5
+
+	#--- Spell Type Compatibility ---
+	#Default: RAPID=INSTANT/CONTINUOUS, SNIPER=INSTANT/LONG, LAUNCHER=INSTANT.
+	#These lists override those defaults for individual spells.
+	#Whitelist takes precedence over blacklist.
+	#If a whitelist is non-empty, the CastType check is skipped entirely for that gun type.
+	[irons_epic_spell_slingers.spell_compatibility]
+		#Spells NEVER inscribable on RAPID guns regardless of CastType.
+		#Use to block powerful instant spells at rapid-fire rate.
+		#Format: ["irons_spellbooks:meteor", "irons_spellbooks:summon_horse"]
+		rapidFireSpellBlacklist = []
+		#Spells NEVER inscribable on SNIPER guns.
+		sniperSpellBlacklist = []
+		#Spells NEVER inscribable on LAUNCHER guns.
+		launcherSpellBlacklist = []
+		#If non-empty: ONLY these spells can be inscribed on RAPID guns (CastType check skipped).
+		#Use to tightly control the spell pool for rapid-fire weapons on a server/modpack.
+		rapidFireSpellWhitelist = []
+		#If non-empty: ONLY these spells can be inscribed on SNIPER guns.
+		sniperSpellWhitelist = []
+		#If non-empty: ONLY these spells can be inscribed on LAUNCHER guns.
+		launcherSpellWhitelist = []
+
